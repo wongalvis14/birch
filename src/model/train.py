@@ -42,6 +42,14 @@ def train(args):
             if batch is None:
                 break
             tokens_tensor, segments_tensor, mask_tensor, label_tensor, _, _ = batch
+            tokens_tensor = torch.tensor(tokens_tensor).to(torch.int64)
+            segments_tensor = torch.tensor(segments_tensor).to(torch.int64)
+            mask_tensor = torch.tensor(mask_tensor).to(torch.int64)
+            label_tensor = torch.tensor(label_tensor).to(torch.int64)
+            print(tokens_tensor.shape)
+            print(segments_tensor.shape)
+            print(mask_tensor.shape)
+            print(label_tensor.shape)
             loss = model(tokens_tensor, segments_tensor, mask_tensor, label_tensor)
             loss.backward()
             tr_loss += loss.item()

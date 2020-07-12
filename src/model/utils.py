@@ -2,8 +2,9 @@ import torch
 from pytorch_pretrained_bert import BertTokenizer, BertModel, BertForNextSentencePrediction
 from pytorch_pretrained_bert.optimization import BertAdam
 
+from .modelling_highway_bert import DeeBertForSequenceClassification
 
-def load_pretrained_model_tokenizer(base_model=None, base_tokenizer=None, device='cuda'):
+def load_pretrained_model_tokenizer(base_model=None, deebert=True, base_tokenizer=None, device='cuda'):
     if device == 'cuda':
         assert torch.cuda.is_available()
 
@@ -11,14 +12,15 @@ def load_pretrained_model_tokenizer(base_model=None, base_tokenizer=None, device
     if base_model is None:
         # Download from huggingface
         base_model = 'bert-base-uncased'
-    model = BertForNextSentencePrediction.from_pretrained(base_model)
+#    model = BertForNextSentencePrediction.from_pretrained(base_model)
+    model = DeeBertForSequenceClassification.from_pretrained(base_model, cache_dir='./.cache') if deebert else BertForNextSentencePrediction.from_pretrained(base_model, cache_dir='./.cache')
 
     if base_tokenizer is None:
         # Download from huggingface
-        tokenizer = BertTokenizer.from_pretrained(base_model)
+        tokenizer = BertTokenizer.from_pretrained(base_model, cache_dir='./.cache')
     else:
         # Load local vocab file
-        tokenizer = BertTokenizer.from_pretrained(base_tokenizer)
+        tokenizer = BertTokenizer.from_pretrained(base_tokenizer, cache_dir='./.cache')
     model.to(device)
     return model, tokenizer
 
