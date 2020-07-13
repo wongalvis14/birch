@@ -1,6 +1,6 @@
 import torch
-from pytorch_pretrained_bert import BertTokenizer, BertModel, BertForNextSentencePrediction
-from pytorch_pretrained_bert.optimization import BertAdam
+from transformers import BertTokenizer
+from transformers.optimization import AdamW
 
 from .modelling_highway_bert import DeeBertForSequenceClassification
 
@@ -38,10 +38,12 @@ def init_optimizer(model, learning_rate, warmup_proportion, num_train_epochs,
          'weight_decay_rate': 0.0}
     ]
 
-    optimizer = BertAdam(optimizer_grouped_parameters,
-                         lr=learning_rate,
-                         warmup=warmup_proportion,
-                         t_total=num_train_steps)
+    optimizer = AdamW(
+        optimizer_grouped_parameters,
+        lr=learning_rate
+    )
+                         # warmup=warmup_proportion,
+                         # t_total=num_train_steps)
 
     return optimizer
 

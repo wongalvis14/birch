@@ -43,7 +43,12 @@ def test(args, split='test', model=None, test_dataset=None):
         if batch is None:
             break
         tokens_tensor, segments_tensor, mask_tensor, label_tensor, qid_tensor, docid_tensor = batch
-        predictions = model(tokens_tensor, segments_tensor, mask_tensor)
+        outputs = model(
+            input_ids=tokens_tensor,
+            attention_mask=mask_tensor,
+            token_type_ids=segments_tensor
+        )
+        predictions = outputs[0]
         scores = predictions.cpu().detach().numpy()
         predicted_index = list(torch.argmax(predictions, dim=-1).cpu().numpy())
         predicted_score = list(predictions[:, 1].cpu().detach().numpy())

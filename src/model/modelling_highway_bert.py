@@ -216,10 +216,6 @@ class DeeBertModel(BertPreTrainedModel):
         # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
         head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
-        print(input_ids.shape)
-        print(position_ids.shape)
-        print(token_type_ids.shape)
-        print(inputs_embeds.shape)
         embedding_output = self.embeddings(
             input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
         )
@@ -303,7 +299,6 @@ class DeeBertForSequenceClassification(BertPreTrainedModel):
         inputs_embeds=None,
         labels=None,
         output_layer=-1,
-        train_highway=False,
     ):
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`, defaults to :obj:`None`):
@@ -385,11 +380,8 @@ class DeeBertForSequenceClassification(BertPreTrainedModel):
                     highway_loss = loss_fct(highway_logits.view(-1, self.num_labels), labels.view(-1))
                 highway_losses.append(highway_loss)
 
-            if train_highway:
-                outputs = (sum(highway_losses[:-1]),) + outputs
-                # exclude the final highway, of course
-            else:
-                outputs = (loss,) + outputs
+            outputs = (loss + sum(highway_losses[:-1]),) + outputs
+
         if not self.training:
             outputs = outputs + ((original_entropy, highway_entropy), exit_layer)
             if output_layer >= 0:

@@ -25,8 +25,9 @@ def train(args):
 
     train_dataset = DataGenerator(args.data_path, args.collection, args.batch_size,
                                   tokenizer, 'train',  args.device)
-    validate_dataset = DataGenerator(args.data_path, args.collection, args.batch_size,
+    validate_dataset = DataGenerator(args.data_path, args.collection, 1,
                                      tokenizer, 'dev', args.device)
+    # batch_size for evaluation changed to 1!
 
     optimizer = init_optimizer(model, args.learning_rate, args.warmup_proportion,
                                args.num_train_epochs, args.batch_size)
@@ -42,15 +43,37 @@ def train(args):
             if batch is None:
                 break
             tokens_tensor, segments_tensor, mask_tensor, label_tensor, _, _ = batch
-            tokens_tensor = torch.tensor(tokens_tensor).to(torch.int64)
-            segments_tensor = torch.tensor(segments_tensor).to(torch.int64)
-            mask_tensor = torch.tensor(mask_tensor).to(torch.int64)
-            label_tensor = torch.tensor(label_tensor).to(torch.int64)
-            print(tokens_tensor.shape)
-            print(segments_tensor.shape)
-            print(mask_tensor.shape)
-            print(label_tensor.shape)
-            loss = model(tokens_tensor, segments_tensor, mask_tensor, label_tensor)
+            '''tokens_tensor
+            [16,43] (16: batch size; 43: longest seq length in the batch)
+            equivalent to input_ids in DeeBertForSequenceClassification.forward
+            each element represents a token (word) in input sentences
+            '''
+
+            '''segments_tensor
+            [16,43]
+            equivalent to token_type_ids
+            it looks like [0,0,0,1,1,1,0,0,0],
+                where the first 0's represent the first sentence,
+                the middle 1's represent the second sentence,
+                the final 0's represent padding
+            '''
+
+            '''mask_tensor
+            [16,43]
+            equivalent to attention_mask: 1 for words and 0 for padding
+            '''
+
+            '''label_tensor
+            [16]
+            equivalent to labels
+            '''
+            outputs = model(
+                input_ids=tokens_tensor,
+                attention_mask=mask_tensor,
+                token_type_ids=segments_tensor,
+                labels=label_tensor
+            )
+            loss = outputs[0]
             loss.backward()
             tr_loss += loss.item()
             optimizer.step()
